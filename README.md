@@ -411,6 +411,7 @@ git show <commit-id>
 xfreerdp /u:uname /p:'pass' /v:IP
 xfreerdp /d:domain.com /u:uname /p:'pass' /v:IP
 xfreerdp /u:uname /p:'pass' /v:IP +clipboard #try this option if normal login doesn't work
+
 ```
 
 ## Adding SSH Public key
@@ -724,6 +725,9 @@ nmap -p21 --script=<name> <IP>
 hydra -L users.txt -P passwords.txt <IP> ftp #'-L' for usernames list, '-l' for username and vice versa
 
 # Check for vulnerabilities associated with the identified version.
+
+#download all files from FTP with one command
+wget -m --no-passive ftp://anonymous:anonymous@IP
 ```
 
 ## SSH enumeration
