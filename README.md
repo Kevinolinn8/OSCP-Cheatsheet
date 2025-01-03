@@ -1165,8 +1165,11 @@ sqlmap -r post.txt -p item  --os-shell  --web-root "/var/www/html/tmp" #/var/www
 ### Searchsploit
 
 ```bash
+
 searchsploit <name>
 searchsploit -m windows/remote/46697.py #Copies the exploit to the current location
+
+#USE GOOGLE AND SEARCH MULTIPLE GITHUBS FOR CORRECT EXPLOITS. Remember to read the script and edit it if we need to!! (example OSCPA MS01)
 ```
 
 ## Reverse Shells
