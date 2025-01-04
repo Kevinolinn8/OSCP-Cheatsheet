@@ -718,6 +718,8 @@ sudo ip r add <subnet> dev ligolo
 ```powershell
 #CHECK ALL SOFTWARE VERSIONS AND HTTP TITLES FOR EXPLOITS VIA GOOGLE
 
+#CHECK ALL PORTS!! IF YOU DONT KNOW THE PORT GOOGLE IT!!
+
 #use -Pn option if you're getting nothing in the scan
 sudo nmap -sS -sVC -p- <IP> #go to scan
 sudo nmap -sU <IP> #always check UDP
